@@ -50,9 +50,11 @@ def compute_cd_dist(pred, gt):
     return dist
 
 
-def evaluate_online(pred_dir, gt_dir):
+def evaluate_online(pred_dir, gt_dir, device):
     pred_files = sorted(glob(osp.join(pred_dir, "*.xyz")))
     gt_files = sorted(glob(osp.join(gt_dir, "*.xyz")))
+
+    print(f"The length of pred_pc_list: {len(pred_files)}, gt_pc_list: {len(gt_files)}")
 
     pred_pc_list, gt_pc_list = [], []
     for pred_fp, gt_fp in zip(pred_files, gt_files):
@@ -62,8 +64,8 @@ def evaluate_online(pred_dir, gt_dir):
         pred_pc_list.append(pred_pc)
         gt_pc_list.append(gt_pc)
     
-    pred_pc_arr = torch.from_numpy(np.stack(pred_pc_list, axis=0)).to(torch.float32)
-    gt_pc_arr = torch.from_numpy(np.stack(gt_pc_list, axis=0)).to(torch.float32)
+    pred_pc_arr = torch.from_numpy(np.stack(pred_pc_list, axis=0)).to(torch.float32).to(device)
+    gt_pc_arr = torch.from_numpy(np.stack(gt_pc_list, axis=0)).to(torch.float32).to(device)
 
     ## Normalize the point cloud
     pred = normalize_point_cloud(pred_pc_arr)
@@ -75,11 +77,8 @@ def evaluate_online(pred_dir, gt_dir):
 
 
 if __name__ == "__main__":
-    points = torch.randn(10, 2048, 3)
-    points = normalize_point_cloud(points)
-    print(points.shape)
-
     pred_dir = "/home/zhanghm/Research/PU/PU-GAN/data/full_test/random_2048_output"
-    gt_dir = "/data/data2/zhanghm/Datasets/PU/PU-GAN/gt_FPS_8192"
+    gt_dir = "/data/data2/zhanghm/Datasets/PU/PU-GAN/test/gt_FPS_8192"
 
-    evaluate_online(pred_dir, gt_dir)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    evaluate_online(pred_dir, gt_dir, device)
